@@ -23,9 +23,10 @@ import java.util.ResourceBundle;
 public class FXMLDominoController implements Initializable {
 
 	private List<Domino> dominoes = new ArrayList<>();
-
 	private String lString, rString;
-	private boolean isAi = false;
+	private boolean isAiTurn = false;
+	private Alert enemyWinner = new Alert(AlertType.INFORMATION, "Противник победил", ButtonType.FINISH);
+	private Alert userWinner = new Alert(AlertType.INFORMATION, "Вы выиграли", ButtonType.FINISH);
 
 	@FXML
 	FlowPane top_panel;
@@ -34,175 +35,185 @@ public class FXMLDominoController implements Initializable {
 	@FXML
 	FlowPane center_panel1, center_panel2, center_panel3, center_panel4;
 
-	private Alert comWinner = new Alert(AlertType.INFORMATION, "Соперник победил",
-			ButtonType.FINISH);
-	private Alert userWinner = new Alert(AlertType.INFORMATION, "Вы выиграли",
-			ButtonType.FINISH);
-
 	@Override
 	public void initialize(URL url, ResourceBundle rb) {
-		initData();
+		createAllDominoes();
 		Collections.shuffle(dominoes);
+
+		//give 7 unique dominoes to player
 		int size = dominoes.size();
 		for (int i = size - 1; i >= size - 7; i--) {
 			Domino c = dominoes.remove(i);
-			addv(bottom_panel, c);
+			addPlayerDomino(bottom_panel, c);
 		}
+
+		//give 7 unique dominoes to enemy
 		size = dominoes.size();
 		for (int i = size - 1; i >= size - 7; i--) {
-			add(top_panel, dominoes.remove(i));
+			addEnemyDomino(top_panel, dominoes.remove(i));
 		}
 	}
 
+	//use domino and put on the table
 	public void addCenter(FlowPane panel, ImageView iv, boolean isLeft) {
 		iv.rotateProperty().set(((Domino) iv.getUserData()).getRotate());
 		iv.setFitHeight(50);
 		iv.setFitWidth(25);
+
 		if (isLeft) {
 			panel.getChildren().add(0, iv);
 		} else {
 			panel.getChildren().add(panel.getChildren().size(), iv);
 
 		}
+
 		FlowPane.setMargin(iv, new Insets(0, 25, 0, 0));
 	}
 
-	public void add(FlowPane panel, Domino card) {
+	//add domino for enemy (hided)
+	public void addEnemyDomino(FlowPane panel, Domino domino) {
 		ImageView iv = new ImageView("file:resources/img/0_0.png");
 		iv.setFitHeight(60);
 		iv.setFitWidth(30);
-		iv.setUserData(card);
+		iv.setUserData(domino);
 		panel.getChildren().add(iv);
 		FlowPane.setMargin(iv, new Insets(0, 30, 0, 0));
 	}
 
-	public void ai() {
-
-		while (shouldTake(top_panel) && dominoes.size() != 0) {
-			takeCard(top_panel, true);
-		}
-		ObservableList<Node> children = top_panel.getChildren();
-
-		while (dominoes.size() == 0 && shouldTake(bottom_panel)) {
-			int size = children.size();
-			for (int i = 0; i < size; i++) {
-				ImageView iv = (ImageView) children.get(i);
-				if (doLeft(top_panel, iv)) {
-					return;
-				}
-				if (doRight(top_panel, iv)) {
-					return;
-				}
-			}
-		}
-		int size = children.size();
-		for (int i = 0; i < size; i++) {
-			ImageView iv = (ImageView) children.get(i);
-			if (doLeft(top_panel, iv)) {
-				return;
-			}
-			if (doRight(top_panel, iv)) {
-				return;
-			}
-		}
-	}
-
-	private boolean doLeft(FlowPane panel, ImageView iv) {
-		Domino card = (Domino) iv.getUserData();
-		boolean canAddLeft = card.isCanAddLeft(lString);
-		if (canAddLeft) {
-			lString = card.getLeft();
-			FlowPane checkLeft = checkLeft();
-			panel.getChildren().remove(iv);
-			iv.setImage(new Image(card.getSrc()));
-			iv.setOnMouseClicked(null);
-			addCenter(checkLeft, iv, true);
-			System.out.println("left " + lString);
-		}
-		isWin();
-		return canAddLeft;
-	}
-
-	private boolean doRight(FlowPane panel, ImageView iv) {
-		Domino card = (Domino) iv.getUserData();
-		boolean canAddRight = card.isCanAddRight(rString);
-		if (canAddRight) {
-			rString = card.getRight();
-			FlowPane checkright = checkright();
-			panel.getChildren().remove(iv);
-			iv.setImage(new Image(card.getSrc()));
-			iv.setOnMouseClicked(null);
-			addCenter(checkright, iv, false);
-			System.out.println("right " + rString);
-		}
-		isWin();
-		return canAddRight;
-	}
-
-	public void addv(FlowPane panel, Domino card) {
-		ImageView iv = new ImageView(card.getSrc());
+	//add domino for player (clickable)
+	public void addPlayerDomino(FlowPane panel, Domino domino) {
+		ImageView iv = new ImageView(domino.getImageSrc());
 		iv.setFitHeight(60);
 		iv.setFitWidth(30);
-		iv.setUserData(card);
+		iv.setUserData(domino);
 		panel.getChildren().add(iv);
 		FlowPane.setMargin(iv, new Insets(0, 30, 0, 0));
 		iv.setOnMouseClicked(new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) {
 				if (center_panel1.getChildren().size() == 0) {
-					lString = card.getLeft();
-					rString = card.getRight();
+					lString = domino.getLeftValue();
+					rString = domino.getRightValue();
+
 					panel.getChildren().remove(iv);
 					iv.setOnMouseClicked(null);
+
 					addCenter(center_panel1, iv, true);
-					isAi = true;
-					ai();
-					isAi = false;
+
+					aiTurn();
+
 					return;
 				}
 
 				while (shouldTake(bottom_panel) && dominoes.size() != 0) {
-					takeCard(bottom_panel, false);
+					takeDomino(bottom_panel, false);
 				}
 
-				if (doLeft(panel, iv)) {
-					isAi = true;
-					ai();
-					isAi = false;
-					return;
-				}
-
-				if (doRight(panel, iv)) {
-					isAi = true;
-					ai();
-					isAi = false;
-					return;
-				}
+				if (ai_addToLeft(panel, iv)) aiTurn();
+				else if (ai_addToRight(panel, iv)) aiTurn();
 
 			}
 		});
 	}
 
-	private boolean shouldTake(FlowPane panel) {
-		ObservableList<Node> children = panel.getChildren();
+	public void aiTurn() {
+		isAiTurn = true;
+
+		while (shouldTake(top_panel) && dominoes.size() != 0) {
+			takeDomino(top_panel, true);
+		}
+
+		ObservableList<Node> children = top_panel.getChildren();
+
+		while (dominoes.size() == 0 && shouldTake(bottom_panel)) {
+			int size = children.size();
+			for (int i = 0; i < size; i++) {
+				ImageView iv = (ImageView) children.get(i);
+				if (ai_addToLeft(top_panel, iv)) {
+					return;
+				}
+				if (ai_addToRight(top_panel, iv)) {
+					return;
+				}
+			}
+		}
 		int size = children.size();
 		for (int i = 0; i < size; i++) {
 			ImageView iv = (ImageView) children.get(i);
-			Domino card = (Domino) iv.getUserData();
-			if (card.hasSame(lString, lString)) {
+
+			if (ai_addToLeft(top_panel, iv)) {
+				return;
+			}
+			if (ai_addToRight(top_panel, iv)) {
+				return;
+			}
+		}
+
+		isAiTurn = false;
+	}
+
+	private boolean ai_addToLeft(FlowPane panel, ImageView iv) {
+		Domino domino = (Domino) iv.getUserData();
+		boolean canAddLeft = domino.isCanAddLeft(lString);
+
+		if (canAddLeft) {
+			lString = domino.getLeftValue();
+			FlowPane checkLeft = checkLeft();
+			panel.getChildren().remove(iv);
+
+			iv.setImage(new Image(domino.getImageSrc()));
+			iv.setOnMouseClicked(null);
+
+			addCenter(checkLeft, iv, true);
+			System.out.println("left " + lString);
+		}
+
+		isWin();
+
+		return canAddLeft;
+	}
+
+	private boolean ai_addToRight(FlowPane panel, ImageView iv) {
+		Domino domino = (Domino) iv.getUserData();
+		boolean canAddRight = domino.isCanAddRight(rString);
+
+		if (canAddRight) {
+			rString = domino.getRightValue();
+			FlowPane checkRight = checkRight();
+			panel.getChildren().remove(iv);
+
+			iv.setImage(new Image(domino.getImageSrc()));
+			iv.setOnMouseClicked(null);
+
+			addCenter(checkRight, iv, false);
+			System.out.println("right " + rString);
+		}
+
+		isWin();
+
+		return canAddRight;
+	}
+
+	private boolean shouldTake(FlowPane panel) {
+		ObservableList<Node> children = panel.getChildren();
+		int size = children.size();
+
+		for (int i = 0; i < size; i++) {
+			ImageView iv = (ImageView) children.get(i);
+			Domino domino = (Domino) iv.getUserData();
+			if (domino.hasSameValue(lString, lString)) {
 				return false;
 			}
 		}
 		return true;
 	}
 
-	private void takeCard(FlowPane panel, boolean isAi) {
-
+	private void takeDomino(FlowPane panel, boolean isAi) {
 		if (dominoes.size() != 0) {
 			if (!isAi) {
-				addv(panel, dominoes.remove(0));
+				addPlayerDomino(panel, dominoes.remove(0));
 			} else {
-				add(panel, dominoes.remove(0));
+				addEnemyDomino(panel, dominoes.remove(0));
 			}
 		}
 	}
@@ -210,58 +221,49 @@ public class FXMLDominoController implements Initializable {
 	private FlowPane checkLeft() {
 		ObservableList<Node> children1 = center_panel1.getChildren();
 		ObservableList<Node> children3 = center_panel3.getChildren();
-		if (children1.size() == children3.size()) {
-			return center_panel1;
-		} else if (children1.size() - 1 == children3.size()) {
-			return center_panel3;
-		}
+
+		if (children1.size() == children3.size()) return center_panel1;
+		else if (children1.size() - 1 == children3.size()) return center_panel3;
+
 		return null;
 	}
 
-	private FlowPane checkright() {
+	private FlowPane checkRight() {
 		ObservableList<Node> children2 = center_panel2.getChildren();
 		ObservableList<Node> children4 = center_panel4.getChildren();
-		if (children2.size() == children4.size()) {
-			return center_panel4;
-		} else if (children2.size() + 1 == children4.size()) {
-			return center_panel2;
-		}
+
+		if (children2.size() == children4.size()) return center_panel4;
+		else if (children2.size() + 1 == children4.size()) return center_panel2;
+
 		return null;
 	}
 
 	private boolean isWin() {
-		System.out.println("win size t " + top_panel.getChildren().size()
-				+ " b " + bottom_panel.getChildren().size());
 		if (top_panel.getChildren().size() == 0) {
-			comWinner.show();
+			enemyWinner.show();
 			return true;
 		}
 
 		if (bottom_panel.getChildren().size() == 0) {
 			userWinner.show();
-			;
 			return true;
 		}
 
 		if (dominoes.size() == 0) {
-			boolean com = shouldTake(top_panel);
+			boolean enemy = shouldTake(top_panel);
 			boolean user = shouldTake(bottom_panel);
-			System.out.println("win " + com + " " + user + " " + isAi);
-			if (com && user) {
-				if (isAi) {
-					userWinner.show();
-					;
-				} else {
-					comWinner.show();
-					;
-				}
+
+			if (enemy && user) {
+				if (isAiTurn) userWinner.show();
+				else enemyWinner.show();
+
 				return true;
 			}
 		}
 		return false;
 	}
 
-	private void initData() {
+	private void createAllDominoes() {
 		dominoes.add(new Domino("file:resources/img/0_0.png", "0", "0"));
 		dominoes.add(new Domino("file:resources/img/0_1.png", "0", "1"));
 		dominoes.add(new Domino("file:resources/img/0_2.png", "0", "2"));
