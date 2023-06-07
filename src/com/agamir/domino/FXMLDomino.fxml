@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.FlowPane?>
+
+<AnchorPane id="AnchorPane" prefHeight="289.0" prefWidth="1074.0" xmlns="http://javafx.com/javafx/8.0.60" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.agamir.domino.FXMLDominoController">
+   <children>
+      <FlowPane fx:id="top_panel" alignment="CENTER" layoutX="193.0" layoutY="14.0" prefHeight="64.0" prefWidth="691.0" style="-fx-background-color: #c24f6e;" />
+      <FlowPane fx:id="center_panel1" alignment="CENTER_RIGHT" layoutX="94.0" layoutY="98.0" prefHeight="30.0" prefWidth="459.0" />
+      <FlowPane fx:id="center_panel3" alignment="CENTER_RIGHT" layoutX="97.0" layoutY="128.0" prefHeight="30.0" prefWidth="431.0">
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets></FlowPane>
+      <FlowPane fx:id="bottom_panel" alignment="CENTER" layoutX="194.0" layoutY="192.0" prefHeight="64.0" prefWidth="691.0" style="-fx-background-color: #aaffff;" />
+      <FlowPane fx:id="center_panel2" alignment="CENTER_LEFT" layoutX="553.0" layoutY="98.0" prefHeight="30.0" prefWidth="431.0" />
+      <FlowPane fx:id="center_panel4" alignment="CENTER_LEFT" layoutX="528.0" layoutY="128.0" prefHeight="30.0" prefWidth="459.0">
+         <opaqueInsets>
+            <Insets />
+         </opaqueInsets>
+      </FlowPane>
+   </children>
+</AnchorPane>
