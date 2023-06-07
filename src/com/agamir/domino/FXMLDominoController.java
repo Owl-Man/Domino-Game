@@ -23,10 +23,10 @@ import java.util.ResourceBundle;
 public class FXMLDominoController implements Initializable {
 
 	private List<Domino> dominoes = new ArrayList<>();
-	private String lString, rString;
+	private String leftDominoValueCache, rightDominoValueCache;
 	private boolean isAiTurn = false;
 	private Alert enemyWinner = new Alert(AlertType.INFORMATION, "Противник победил", ButtonType.FINISH);
-	private Alert userWinner = new Alert(AlertType.INFORMATION, "Вы выиграли", ButtonType.FINISH);
+	private Alert playerWinner = new Alert(AlertType.INFORMATION, "Вы выиграли", ButtonType.FINISH);
 
 	@FXML
 	FlowPane top_panel;
@@ -92,8 +92,8 @@ public class FXMLDominoController implements Initializable {
 			@Override
 			public void handle(MouseEvent event) {
 				if (center_panel1.getChildren().size() == 0) {
-					lString = domino.getLeftValue();
-					rString = domino.getRightValue();
+					leftDominoValueCache = domino.getLeftValue();
+					rightDominoValueCache = domino.getRightValue();
 
 					panel.getChildren().remove(iv);
 					iv.setOnMouseClicked(null);
@@ -154,10 +154,10 @@ public class FXMLDominoController implements Initializable {
 
 	private boolean ai_addToLeft(FlowPane panel, ImageView iv) {
 		Domino domino = (Domino) iv.getUserData();
-		boolean canAddLeft = domino.isCanAddLeft(lString);
+		boolean canAddLeft = domino.isCanAddLeft(leftDominoValueCache);
 
 		if (canAddLeft) {
-			lString = domino.getLeftValue();
+			leftDominoValueCache = domino.getLeftValue();
 			FlowPane checkLeft = checkLeft();
 			panel.getChildren().remove(iv);
 
@@ -165,7 +165,7 @@ public class FXMLDominoController implements Initializable {
 			iv.setOnMouseClicked(null);
 
 			addCenter(checkLeft, iv, true);
-			System.out.println("left " + lString);
+			System.out.println("left " + leftDominoValueCache);
 		}
 
 		isWin();
@@ -175,10 +175,10 @@ public class FXMLDominoController implements Initializable {
 
 	private boolean ai_addToRight(FlowPane panel, ImageView iv) {
 		Domino domino = (Domino) iv.getUserData();
-		boolean canAddRight = domino.isCanAddRight(rString);
+		boolean canAddRight = domino.isCanAddRight(rightDominoValueCache);
 
 		if (canAddRight) {
-			rString = domino.getRightValue();
+			rightDominoValueCache = domino.getRightValue();
 			FlowPane checkRight = checkRight();
 			panel.getChildren().remove(iv);
 
@@ -186,7 +186,7 @@ public class FXMLDominoController implements Initializable {
 			iv.setOnMouseClicked(null);
 
 			addCenter(checkRight, iv, false);
-			System.out.println("right " + rString);
+			System.out.println("right " + rightDominoValueCache);
 		}
 
 		isWin();
@@ -201,7 +201,7 @@ public class FXMLDominoController implements Initializable {
 		for (int i = 0; i < size; i++) {
 			ImageView iv = (ImageView) children.get(i);
 			Domino domino = (Domino) iv.getUserData();
-			if (domino.hasSameValue(lString, lString)) {
+			if (domino.hasSameValue(leftDominoValueCache, leftDominoValueCache)) {
 				return false;
 			}
 		}
@@ -245,7 +245,7 @@ public class FXMLDominoController implements Initializable {
 		}
 
 		if (bottom_panel.getChildren().size() == 0) {
-			userWinner.show();
+			playerWinner.show();
 			return true;
 		}
 
@@ -254,7 +254,7 @@ public class FXMLDominoController implements Initializable {
 			boolean user = shouldTake(bottom_panel);
 
 			if (enemy && user) {
-				if (isAiTurn) userWinner.show();
+				if (isAiTurn) playerWinner.show();
 				else enemyWinner.show();
 
 				return true;
